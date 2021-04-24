@@ -1,0 +1,41 @@
+# Dockerfile for building bone-segmentation exe on CentOS 7
+# (c) 2021 Robert Grupp (grupp@jhu.edu)
+
+ARG os_version=7
+
+FROM centos:${os_version}
+
+RUN yum install -y \
+        gcc gcc-c++ make \
+        wget \
+        openssl-devel && \
+    rm -rf /var/cache/yum/*
+
+# Build a recent version of cmake
+RUN mkdir cmake_build && cd cmake_build && \
+    wget https://github.com/Kitware/CMake/releases/download/v3.18.2/cmake-3.18.2.tar.gz && \
+    tar xf cmake-3.18.2.tar.gz && cd cmake-3.18.2 && \
+    ./configure && make && make install && \
+    cd / && rm -rf cmake_build
+
+# Build ITK
+RUN mkdir itk_build && cd itk_build && \
+    wget https://github.com/InsightSoftwareConsortium/ITK/releases/download/v5.1.1/InsightToolkit-5.1.1.tar.gz && \
+    tar xf InsightToolkit-5.1.1.tar.gz && cd InsightToolkit-5.1.1 && \
+    mkdir build && cd build && \
+    cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS:BOOL=OFF \
+         .. && \
+    cmake --build . && cmake --build . --target install && \
+    cd / && rm -rf itk_build
+
+# Build bone segmentation
+
+COPY src bone_seg_src
+
+RUN mkdir bone_seg_src/build && cd bone_seg_src/build && \
+    cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS:BOOL=OFF .. && \
+    cmake --build . && \
+    mv SegmentBoneFromCT / && \
+    cd / && rm -rf bone_seg_src
+
+

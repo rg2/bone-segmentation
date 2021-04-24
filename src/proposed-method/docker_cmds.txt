@@ -1,0 +1,22 @@
+
+docker build -t bone-seg-ubuntu-16.04 --build-arg os_version=16.04 -f Dockerfile.ubuntu .
+docker build -t bone-seg-ubuntu-18.04 --build-arg os_version=18.04 -f Dockerfile.ubuntu .
+docker build -t bone-seg-ubuntu-20.04 --build-arg os_version=20.04 -f Dockerfile.ubuntu .
+
+docker build -t bone-seg-centos-7 --build-arg os_version=7 -f Dockerfile.centos .
+
+#export OS_VER="centos-7"
+#export OS_VER="ubuntu-16.04"
+#export OS_VER="ubuntu-18.04"
+export OS_VER="ubuntu-20.04"
+export SEG_VER="v2021-04-24"
+
+CONTAINER_ID=`docker create bone-seg-$OS_VER` && docker cp "$CONTAINER_ID:/SegmentBoneFromCT" . && docker rm $CONTAINER_ID
+export DIST_NAME="bone-seg-$SEG_VER-$OS_VER"
+
+mkdir $DIST_NAME
+mv SegmentBoneFromCT $DIST_NAME
+cp README $DIST_NAME
+tar czf $DIST_NAME.tar.gz $DIST_NAME
+rm -rf $DIST_NAME
+
